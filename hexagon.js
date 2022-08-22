@@ -2,11 +2,11 @@ const turf = require('@turf/turf');
 const http = require("http");
 
 const pt1 = turf.point([52.458379, 6.122787]); // ,
-pt1.properties = {dotId: 8000}
+pt1.properties = {dotId: 8000, comp: 'AL'}
 const pt2 = turf.point([ 52.455990,6.125036]); // 52.455990, 6.125036
-pt2.properties = {dotId: 8001}
+pt2.properties = {dotId: 8001, comp: 'PL'}
 const pt3 = turf.point([ 52.448091,5.840200]); // 52.448091, 5.840200
-pt3.properties = {dotId: 8002}
+pt3.properties = {dotId: 8002, comp: 'PLL'}
 const points = turf.featureCollection([pt1, pt2, pt3]);
 const g = createHexGrid();
 http.createServer(function (request, response) {
@@ -15,8 +15,12 @@ http.createServer(function (request, response) {
 
 	const features = g.features.map((f, i) => ({...f, properties:{pid: i}}))
 	g.features = features;
-	var tagged = turf.tag(points, g, 'pid', 'pid');
-	response.end(JSON.stringify(tagged));
+	const tagged = turf.tag(points, g, 'pid', 'pid');
+	const pids = tagged.features.map(f => f.properties.pid);
+	const uniqPids = [...new Set(pids)];
+	const selected = uniqPids.map(up => features.find(f => f.properties.pid === up));
+	r = selected.map(s => ({...s, properties: {...s.properties, hello: 'number'}}));
+	response.end(JSON.stringify(r));
  }).listen(8081);
 
  // Console will print the message
